@@ -1,0 +1,10 @@
+[project]
+name = "hetangai"
+version = "0.1.0"
+description = "HeTangAI - AI Image & Video Generation Desktop App"
+requires-python = ">=3.10"
+dependencies = [
+    "pywebview",
+    "peewee",
+    "requests",
+]

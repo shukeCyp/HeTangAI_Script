@@ -1,0 +1,90 @@
+name: Build
+
+on:
+  push:
+    branches: ["*"]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Install Python dependencies
+        run: |
+          uv sync
+          uv pip install pyinstaller
+
+      - name: Build exe
+        run: |
+          uv run pyinstaller --onefile --windowed --name "HeTangAI" --add-data "web;web" --add-data "version.txt;." backend/main.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HeTangAI-Windows
+          path: dist/HeTangAI.exe
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Install Python dependencies
+        run: |
+          uv sync
+          uv pip install pyinstaller
+
+      - name: Build app
+        run: |
+          uv run pyinstaller --onefile --windowed --name "HeTangAI" --add-data "web:web" --add-data "version.txt:." backend/main.py
+
+      - name: Create DMG
+        run: |
+          hdiutil create -volname "HeTangAI" -srcfolder dist/ -ov -format UDZO "HeTangAI.dmg"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: HeTangAI-macOS
+          path: HeTangAI.dmg
