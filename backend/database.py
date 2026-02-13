@@ -58,7 +58,6 @@ class Setting(BaseModel):
 # ---------- 便捷操作函数 ----------
 
 DEFAULT_SETTINGS = {
-    "api_base_url": "http://hetang.lyvideo.top",
     "api_key": "",
     "image_model": "gemini-3.0-pro-image-landscape",
     "video_model": "",

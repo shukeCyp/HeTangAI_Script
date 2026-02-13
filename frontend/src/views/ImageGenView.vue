@@ -74,6 +74,12 @@
             <img :src="getImageSrc(task)" class="task-thumb-img" />
           </div>
           <div class="task-actions" @click.stop>
+            <button v-if="task.status === 'error'" class="action-btn action-retry" title="重试" @click="retryTask(task.id)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="23 4 23 10 17 10" />
+                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
+              </svg>
+            </button>
             <button v-if="task.status === 'pending'" class="action-btn" title="取消" @click="cancelTask(task.id)">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -369,6 +375,24 @@ async function cancelTask(id) {
   } catch (e) { toast.error('取消失败') }
 }
 
+async function retryTask(id) {
+  try {
+    const updated = await window.pywebview.api.retry_task(id)
+    if (updated && updated.id) {
+      const task = tasks.value.find(t => t.id === id)
+      if (task) {
+        task.status = 'pending'
+        task.progress = []
+        task.result_image = ''
+        task.result_image_type = ''
+        task.error = ''
+        task.file_path = ''
+      }
+      toast.success('任务已重新提交')
+    }
+  } catch (e) { toast.error('重试失败') }
+}
+
 async function deleteTask(id) {
   try {
     await window.pywebview.api.delete_task(id)
@@ -555,6 +579,8 @@ function closeAllDropdowns() {
   cursor: pointer; transition: all var(--transition-fast);
 }
 .action-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+.action-retry { color: var(--accent); }
+.action-retry:hover { background: rgba(91, 91, 214, 0.1); color: var(--accent-hover); }
 
 /* 空状态 */
 .empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }

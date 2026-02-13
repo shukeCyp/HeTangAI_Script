@@ -1,6 +1,6 @@
 API 使用示例（需要使用流式）
 文生图
-curl -X POST "https://api.haoapi.top/v1/chat/completions" \
+curl -X POST "https://hetang.lyvideo.top/v1/chat/completions" \
   -H "Authorization: Bearer XXXX" \   # 此处需要填写APIKEY
   -H "Content-Type: application/json" \
   -d '{
@@ -14,7 +14,7 @@ curl -X POST "https://api.haoapi.top/v1/chat/completions" \
     "stream": true
   }'
 图生图
-curl -X POST "https://api.haoapi.top/v1/chat/completions" \
+curl -X POST "https://hetang.lyvideo.top/v1/chat/completions" \
   -H "Authorization: Bearer XXXX" \   # 此处需要填写APIKEY
   -H "Content-Type: application/json" \
   -d '{

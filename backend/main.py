@@ -13,6 +13,7 @@ import webview
 from backend.logger import setup_logger, get_logger
 from backend.database import init_db
 from backend.task_manager import TaskManager
+from backend.video_task_manager import VideoTaskManager
 from backend.api import Api
 
 
@@ -54,10 +55,11 @@ def main():
 
     # 3. 创建任务管理器
     task_manager = TaskManager()
+    video_task_manager = VideoTaskManager()
     logger.info("任务管理器已初始化")
 
     # 4. 创建 API 实例
-    api = Api(task_manager)
+    api = Api(task_manager, video_task_manager)
 
     # 5. 获取前端目录
     try:
@@ -91,6 +93,7 @@ def main():
 
     # 8. 清理
     task_manager.shutdown()
+    video_task_manager.shutdown()
     logger.info("荷塘AI生成器已退出")
 
 

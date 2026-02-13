@@ -6,6 +6,7 @@ HeTangAI JS API 桥接
 
 import json
 import base64
+import webbrowser
 
 import requests
 import webview
@@ -26,19 +27,22 @@ from backend.database import (
     get_db_file_size,
 )
 from backend.task_manager import TaskManager
+from backend.video_task_manager import VideoTaskManager
 
 
 class Api:
     """pywebview JS API 类，所有 public 方法都会暴露给前端"""
 
-    def __init__(self, task_manager: TaskManager):
+    def __init__(self, task_manager: TaskManager, video_task_manager: VideoTaskManager):
         self._window: webview.Window | None = None
         self._task_manager = task_manager
+        self._video_task_manager = video_task_manager
 
     def set_window(self, window: webview.Window):
         """由 main.py 在窗口创建后调用"""
         self._window = window
         self._task_manager.set_window(window)
+        self._video_task_manager.set_window(window)
 
     # ===================== 版本号 =====================
 
@@ -46,6 +50,12 @@ class Api:
         """获取应用版本号"""
         from backend.main import get_version
         return get_version()
+
+    # ===================== 外部链接 =====================
+
+    def open_external_url(self, url: str):
+        """使用系统浏览器打开外部链接"""
+        webbrowser.open(url)
 
     # ===================== 设置相关 =====================
 
@@ -116,6 +126,10 @@ class Api:
         """清除所有已完成/失败的任务"""
         return self._task_manager.clear_done_tasks()
 
+    def retry_task(self, task_id: str) -> dict:
+        """重试失败的图片任务"""
+        return self._task_manager.retry_task(task_id)
+
     # ===================== 图片保存 =====================
 
     def save_task_image(self, task_id: str) -> str:
@@ -162,4 +176,83 @@ class Api:
             path = result if isinstance(result, str) else result[0]
             get_logger().info("已选择下载路径: %s", path)
             return path
+        return ""
+
+    # ===================== 任务制视频生成 =====================
+
+    def add_video_task(
+        self,
+        prompt: str,
+        model: str,
+        mode: str,
+        image_base64: str = "",
+        end_image_base64: str = "",
+    ) -> dict:
+        """
+        添加视频生成任务到队列
+        - prompt: 提示词
+        - model: 模型名
+        - mode: "text2video" 或 "img2video"
+        - image_base64: 图生视频时的首帧 base64
+        - end_image_base64: 图生视频时的尾帧 base64（可选）
+        返回: 任务摘要 dict
+        """
+        return self._video_task_manager.add_task(
+            prompt, model, mode, image_base64, end_image_base64
+        )
+
+    def get_all_video_tasks(self) -> list:
+        """获取所有视频任务列表"""
+        return self._video_task_manager.get_all_tasks()
+
+    def get_video_task(self, task_id: str) -> dict:
+        """获取单个视频任务详情"""
+        return self._video_task_manager.get_task(task_id)
+
+    def cancel_video_task(self, task_id: str) -> bool:
+        """取消排队中的视频任务"""
+        return self._video_task_manager.cancel_task(task_id)
+
+    def delete_video_task(self, task_id: str) -> bool:
+        """删除视频任务记录"""
+        return self._video_task_manager.delete_task(task_id)
+
+    def clear_done_video_tasks(self) -> int:
+        """清除所有已完成/失败的视频任务"""
+        return self._video_task_manager.clear_done_tasks()
+
+    def retry_video_task(self, task_id: str) -> dict:
+        """重试失败的视频任务"""
+        return self._video_task_manager.retry_task(task_id)
+
+    # ===================== 视频保存 =====================
+
+    def save_task_video(self, task_id: str) -> str:
+        """弹出保存对话框，保存指定任务的视频"""
+        if not self._window:
+            return ""
+
+        video_url = self._video_task_manager.get_task_video(task_id)
+        if not video_url:
+            return ""
+
+        result = self._window.create_file_dialog(
+            webview.SAVE_DIALOG,
+            save_filename="hetangai_video.mp4",
+            file_types=("MP4 视频 (*.mp4)",),
+        )
+
+        if result:
+            file_path = result if isinstance(result, str) else result[0]
+            try:
+                resp = requests.get(video_url, timeout=120)
+                resp.raise_for_status()
+
+                with open(file_path, "wb") as f:
+                    f.write(resp.content)
+                get_logger().info("视频已保存: %s", file_path)
+                return file_path
+            except Exception as e:
+                get_logger().error("保存视频失败: %s", e)
+                return ""
         return ""

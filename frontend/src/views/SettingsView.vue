@@ -5,19 +5,24 @@
     </header>
 
     <div class="settings-body">
+      <!-- 官网 -->
+      <section class="settings-section">
+        <h2 class="section-title">官网</h2>
+        <div class="setting-item">
+          <button class="website-link" @click="openWebsite">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+            <span>打开荷塘AI官网（注册/获取API Key）</span>
+          </button>
+        </div>
+      </section>
+
       <!-- API 配置 -->
       <section class="settings-section">
         <h2 class="section-title">API 配置</h2>
-
-        <div class="setting-item">
-          <label class="label">API Base URL</label>
-          <input
-            v-model="settings.api_base_url"
-            class="input"
-            placeholder="http://hetang.lyvideo.top"
-            @blur="saveSetting('api_base_url')"
-          />
-        </div>
 
         <div class="setting-item">
           <label class="label">API Key</label>
@@ -146,12 +151,13 @@
 import { ref, reactive, onMounted } from 'vue'
 
 const settings = reactive({
-  api_base_url: '',
   api_key: '',
   thread_pool_size: '2',
   auto_download: 'false',
   download_path: '',
 })
+
+const WEBSITE_URL = 'https://hetang.lyvideo.top/register?aff=7yl6'
 
 const showApiKey = ref(false)
 const clearingLogs = ref(false)
@@ -222,6 +228,14 @@ async function selectDownloadPath() {
     }
   } catch (err) {
     console.error('选择目录失败', err)
+  }
+}
+
+async function openWebsite() {
+  try {
+    await window.pywebview.api.open_external_url(WEBSITE_URL)
+  } catch (err) {
+    console.error('打开网页失败', err)
   }
 }
 
@@ -419,5 +433,30 @@ function formatSize(bytes) {
 .toggle-label {
   font-size: var(--font-size-xs);
   color: var(--text-tertiary);
+}
+
+/* 官网链接 */
+.website-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--accent);
+  font-family: var(--font-family);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+.website-link:hover {
+  background: rgba(91, 91, 214, 0.08);
+  border-color: rgba(91, 91, 214, 0.3);
+}
+.website-link svg {
+  flex-shrink: 0;
 }
 </style>
